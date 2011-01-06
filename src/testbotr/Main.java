@@ -62,7 +62,7 @@ public class Main {
         Map<String, String> argsquery = new HashMap<String, String>();
         argsquery.put("api_key", key);
         argsquery.put("api_format", "json");
-        argsquery.put("api_timestamp", String.valueOf(System.currentTimeMillis()));
+        argsquery.put("api_timestamp", String.valueOf(System.currentTimeMillis()).substring(0, 10));
         argsquery.put("api_nonce", getNewNonce());
         
         ArrayList<String> listkey = new ArrayList<String>(argsquery.keySet());
@@ -71,15 +71,17 @@ public class Main {
         for (String string : listkey) {
             querystring = querystring + string + "=" + URLEncoder.encode(argsquery.get(string)) + "&";
         }
-        querystring.substring(0, querystring.length());
-        querystring = querystring + secret;
+        querystring = querystring.substring(0, querystring.length()-1); //suppression du caractere & en fin de chaine
+        String signature = querystring + secret;
+        System.out.println(signature);
         MessageDigest md;
         md = MessageDigest.getInstance("SHA-1");
 
         //querystring = URLEncoder.encode(querystring);
-        String signature = convertToHex(md.digest(querystring.getBytes()));
+        signature = convertToHex(md.digest(signature.getBytes()));
 
         URL url = new URL(basicurl + "?" + querystring + "&api_signature=" + signature);
+        System.out.println(url);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 
         connection.setRequestMethod("GET");
