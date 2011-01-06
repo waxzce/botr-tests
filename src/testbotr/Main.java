@@ -5,6 +5,7 @@
 package testbotr;
 
 import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -16,7 +17,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Random;
+import org.clevercloud.botrapi.BotrAPI;
 
 /**
  *
@@ -24,77 +27,19 @@ import java.util.Random;
  */
 public class Main {
 
-    private static String convertToHex(byte[] data) {
-        StringBuffer buf = new StringBuffer();
-        for (int i = 0; i < data.length; i++) {
-            int halfbyte = (data[i] >>> 4) & 0x0F;
-            int two_halfs = 0;
-            do {
-                if ((0 <= halfbyte) && (halfbyte <= 9)) {
-                    buf.append((char) ('0' + halfbyte));
-                } else {
-                    buf.append((char) ('a' + (halfbyte - 10)));
-                }
-                halfbyte = data[i] & 0x0F;
-            } while (two_halfs++ < 1);
-        }
-        return buf.toString();
-    }
-
-    private static String getNewNonce() {
-        String nonce = "";
-        Random random = new Random();
-        while (nonce.length() < 8) {
-            nonce += random.nextInt(10);
-        }
-        return nonce.substring(0, 7);
-    }
-
     /**
      * @param args the command line arguments
      */
     public static void main(String[] args) throws NoSuchAlgorithmException,
             IOException {
-        String key = "KEY";
-        String secret = "SECRET";
-        String basicurl = "https://api.bitsontherun.com/v1/videos/list";
+        Properties properties = new Properties();
+        properties.load(new FileReader("/etc/botrcreds.properties"));
+        String key = properties.getProperty("key");
+        String secret = properties.getProperty("secret");
+        BotrAPI botr = new BotrAPI(key, secret);
 
-        Map<String, String> argsquery = new HashMap<String, String>();
-        argsquery.put("api_key", key);
-        argsquery.put("api_format", "json");
-        argsquery.put("api_timestamp", String.valueOf(System.currentTimeMillis()).substring(0, 10));
-        argsquery.put("api_nonce", getNewNonce());
-        
-        ArrayList<String> listkey = new ArrayList<String>(argsquery.keySet());
-        Collections.sort(listkey);
-        String querystring = "";
-        for (String string : listkey) {
-            querystring = querystring + string + "=" + URLEncoder.encode(argsquery.get(string)) + "&";
-        }
-        querystring = querystring.substring(0, querystring.length()-1); //suppression du caractere & en fin de chaine
-        String signature = querystring + secret;
-        System.out.println(signature);
-        MessageDigest md;
-        md = MessageDigest.getInstance("SHA-1");
+        System.out.println(botr.getVideos());
+        System.out.println(botr.getAccountContents());
 
-        //querystring = URLEncoder.encode(querystring);
-        signature = convertToHex(md.digest(signature.getBytes()));
-
-        URL url = new URL(basicurl + "?" + querystring + "&api_signature=" + signature);
-        System.out.println(url);
-        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-
-        connection.setRequestMethod("GET");
-        connection.setDoInput(true);
-        connection.connect();
-        System.out.println(connection.getResponseCode());
-        System.out.println(connection.getResponseMessage());
-        BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-        String line = null;
-        String full = "";
-        while ((line = in.readLine()) != null) {
-            full = full + line;
-        }
-        System.out.println(full);
     }
 }
