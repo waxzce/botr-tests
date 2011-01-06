@@ -8,18 +8,13 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
@@ -50,7 +45,7 @@ public class Main {
         String nonce = "";
         Random random = new Random();
         while (nonce.length() < 8) {
-            nonce.concat(String.valueOf(random.nextInt(100)));
+            nonce += random.nextInt(10);
         }
         return nonce.substring(0, 7);
     }
@@ -69,9 +64,7 @@ public class Main {
         argsquery.put("api_format", "json");
         argsquery.put("api_timestamp", String.valueOf(System.currentTimeMillis()));
         argsquery.put("api_nonce", getNewNonce());
-
-
-
+        
         ArrayList<String> listkey = new ArrayList<String>(argsquery.keySet());
         Collections.sort(listkey);
         String querystring = "";
